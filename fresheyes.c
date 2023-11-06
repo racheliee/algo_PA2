@@ -41,6 +41,7 @@ void write_final_results(char** dna, int size, char* lcs){
     int max_length = 0;
     int indexes[5] = {0};
 
+    // fill with dashes
     for(int i = 0; i < size; i++){
         aligned_dna[i] = malloc(sizeof(char) * 500);
         for (int j = 0; j < 500; j++) {
@@ -51,6 +52,7 @@ void write_final_results(char** dna, int size, char* lcs){
     FILE *output;
     output = fopen("hw2_output.txt", "w");
 
+    // append elements to aligned dna one by one according to the lcs alignment
     int aligned_index = 0;
     int count = 0; //count the number of strings that are longer than the lcs
     while(count < size){    
@@ -84,7 +86,7 @@ void write_final_results(char** dna, int size, char* lcs){
 
     //write aligned sequences to file
     for(int i = 0; i < size; i++) {
-        for(int j = 0; j < aligned_index; j++){
+        for(int j = 0; j < strlen(aligned_dna[0]); j++){
             fputc(aligned_dna[i][j], output);
         }
         fputc('\n', output);
@@ -93,7 +95,7 @@ void write_final_results(char** dna, int size, char* lcs){
 
     //print asterisks
     int i = 0;
-    for(int j = 0; j < aligned_index; j++){
+    for(int j = 0; j < strlen(aligned_dna[0]); j++){
         if(i < strlen(lcs) && lcs[i] == aligned_dna[0][j]){
             fputc('*', output);
             i++;
@@ -205,6 +207,53 @@ char* find_lcs3(char** dna){
     return lcs;
 }
 
+char* find_lcs4(char** dna){
+    int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]);
+
+    int table[len1+1][len2+1][len3+1][len4+1];
+
+    for(int i = 0; i < len1+1; i++){
+        for(int j = 0; j < len2+1; j++){
+            for(int k = 0; k < len3+1; k++){
+                for(int l= 0; l < len4+1; l++){
+                    if(i == 0 || j == 0 || k == 0|| l == 0){
+                        table[i][j][k][l] = 0;
+                    }else if(dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1] && dna[2][k-1] == dna[3][l-1]){
+                        table[i][j][k][l] = table[i-1][j-1][k-1][l-1] + 1;
+                    }else{
+                        table[i][j][k][l] = get_max(table[i-1][j][k][l], table[i][j-1][k][l], table[i][j][k-1][l], table[i][j][k][l-1], 0);
+                    }
+                }
+            }
+        }
+    }
+
+    int lcs_length = table[len1][len2][len3][len4];
+    char* lcs = malloc(sizeof(char) * lcs_length);
+    lcs[lcs_length] = '\0';
+
+    int lcs_index = lcs_length-1;
+    int i = len1; int j = len2; int k = len3; int l = len4;
+    while(i > 0 && j > 0 && k > 0 && l > 0){
+        int temp = table[i][j][k][l];
+        if(table[i-1][j][k][l] == temp){
+            i--;
+        }else if(table[i][j-1][k][l] == temp){
+            j--;
+        }else if(table[i][j][k-1][l] == temp){
+            k--;
+        }else if(table[i][j][k][l-1] == temp){
+            l--;
+        }else{
+            lcs[lcs_index] = dna[0][i-1];
+            lcs_index--;
+            i--; j--; k--; l--;
+        }
+    }
+
+    return lcs;
+}
+
 int main(){
     int string_num = 0;
     char* dna[5];
@@ -215,6 +264,8 @@ int main(){
         lcs = find_lcs2(dna);
     }else if(string_num == 3){
         lcs = find_lcs3(dna);
+    }else if(string_num == 4){
+        lcs = find_lcs4(dna);
     }
     
     printf("lcs: %s\n", lcs);
