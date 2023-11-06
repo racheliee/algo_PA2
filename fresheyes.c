@@ -8,8 +8,8 @@
 // helper functions ============================================================
 // takes input
 void take_input(char** dna, int* string_num){
-    FILE *input_file = fopen("hw2_input.txt", "r");
-    //FILE *input_file = fopen("dna_sequences.txt", "r");
+    //FILE *input_file = fopen("hw2_input.txt", "r");
+    FILE *input_file = fopen("dna_sequences.txt", "r");
 
     //scan number of inputs
     fscanf(input_file, "%d", string_num); 
@@ -55,19 +55,29 @@ void write_final_results(char** dna, int size, char* lcs){
     output = fopen("hw2_output.txt", "w");
 
     int aligned_index = 0;
-    while(indexes[0] < strlen(dna[0]) && indexes[1] < strlen(dna[1]) && indexes[2] < strlen(dna[2]) && indexes[3] < strlen(dna[3]) && indexes[4] < strlen(dna[4])){
+    int loop = 1;
+    while(loop){
         for(int i = 0; i < size; i++){
             if(dna[i][indexes[i]] != lcs[lcs_index]){
                 aligned_dna[i][aligned_index] = dna[i][indexes[i]];
             }else if (lcs[lcs_index] == dna[i][indexes[i]] && is_common(dna, size, lcs, lcs_index, indexes)){ //aligned
-                aligned_dna[i][aligned_index] = dna[i][indexes[i]];
+                for(int j = 0; j < size; j++) aligned_dna[j][aligned_index] = dna[j][indexes[j]];
                 lcs_index++;
+                break;
             }else{
                 indexes[i]--; //if not aligned, leave as dash
             } 
         }
         aligned_index++;
-        for(int i = 0; i <size; i++) indexes[i]++;
+        for(int i = 0; i <size; i++) indexes[i]++; //increment indexes
+        
+        //check if indexes are within bound
+        for(int i = 0; i < size; i++){
+            if(indexes[i] >= strlen(dna[i])) {
+                loop = 0;
+                break;
+            }
+        }
     }
 
     //appending any left over characters after alignment
@@ -93,7 +103,7 @@ void write_final_results(char** dna, int size, char* lcs){
     // print asterisks 
     lcs_index = 0;
     for(int j = 0; j < aligned_index; j++){
-        if(lcs_index > strlen(lcs)) break;
+        if(lcs_index > (strlen(lcs))) break;
         else if(lcs[lcs_index] == aligned_dna[0][j]){
             fputc('*', output);
             lcs_index++;
@@ -102,6 +112,7 @@ void write_final_results(char** dna, int size, char* lcs){
         }
     }
     
+    for(int i = 0; i < size; i ++) free(aligned_dna[i]);
     fclose(output);
 }
 
@@ -125,7 +136,6 @@ char* find_lcs2(char** dna){
 
     // create table
     int** table = (int**)malloc(sizeof(int*) * (len1+1));
-
     for(int i = 0; i < len1+1; i++){
         table[i] = (int*)malloc(sizeof(int) * (len2+1));
     }
@@ -149,14 +159,14 @@ char* find_lcs2(char** dna){
     lcs[lcs_length] = '\0';
 
     // backtracking to find lcs
+    int lcs_index = lcs_length-1;
     int i = len1; int j = len2;
-    int lcs_index = lcs_length -1;
     while(i > 0 && j > 0){
-        if(table[i-1][j] == table[i][j]) {
+        if(table[i-1][j] == table[i][j]){
             i--;
-        } else if (table[j-1][i] == table[i][j]) {
+        }else if(table[i][j-1] == table[i][j]){
             j--;
-        } else{
+        }else{
             lcs[lcs_index] = dna[0][i-1];
             i--; j--;
             lcs_index--;
