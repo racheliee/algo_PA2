@@ -4,7 +4,8 @@
 
 #define MAX_LENGTH 120
 
-// helper functions ======================================================
+// helper functions ============================================================
+// takes input
 void take_input(char** dna, int* string_num){
     FILE *input_file = fopen("hw2_input.txt", "r");
 
@@ -23,7 +24,6 @@ void take_input(char** dna, int* string_num){
     fclose(input_file);
 }
 
-
 // returns 1 if the values are the same at the given index
 int is_common(char** dna, int size, char* lcs, int lcs_index, int indexes[5]){
     for(int i = 0; i < size; i++){
@@ -34,6 +34,7 @@ int is_common(char** dna, int size, char* lcs, int lcs_index, int indexes[5]){
     return 1;
 }
 
+// write final inputs to file (aligned dna sequences and asterisks to mark lcs)
 void write_final_results(char** dna, int size, char* lcs){
     int lcs_index = 0;
     char* aligned_dna[size];
@@ -117,8 +118,7 @@ int get_max(int a, int b, int c, int d, int e){
     return max;
 }
 
-
-
+// lcs functions ================================================================
 char* find_lcs2(char** dna){
     int len1 = strlen(dna[0]);
     int len2 = strlen(dna[1]);
@@ -144,15 +144,16 @@ char* find_lcs2(char** dna){
     int i = len1; int j = len2;
     int lcs_index = lcs_length -1;
     while(i > 0 && j > 0){
-        if(dna[0][i-1] == dna[1][j-1]){
+        if(table[i-1][j] == table[i][j]) {
+            i--;
+        }
+        else if (table[j-1][i] == table[i][j]) {
+            j--;
+        }
+        else{
             lcs[lcs_index] = dna[0][i-1];
-            i--;
-            j--;
+            i--; j--;
             lcs_index--;
-        }else if(table[i-1][j] > table[i][j-1]){
-            i--;
-        }else{
-            j--;
         }
     }
 
@@ -181,10 +182,27 @@ char* find_lcs3(char** dna){
     }
 
     int lcs_length = table[len1][len2][len3];
-    
+    char* lcs = malloc(sizeof(char) * lcs_length);
+    lcs[lcs_length] = '\0';
 
+    int i = len1; int j = len2; int k = len3;
+    int lcs_index = lcs_length-1;
 
-    
+    while(i > 0 && j > 0 && k > 0){
+        if(table[i-1][j][k] == table[i][j][k]){
+            i--;
+        }else if(table[i][j-1][k] == table[i][j][k]){
+            j--;
+        }else if(table[i][j][k-1] == table[i][j][k]){
+            k--;
+        }else{
+            lcs[lcs_index] = dna[0][i-1];
+            i--; j--; k--;
+            lcs_index--;
+        }
+    }
+
+    return lcs;
 }
 
 int main(){
@@ -198,7 +216,7 @@ int main(){
     }else if(string_num == 3){
         lcs = find_lcs3(dna);
     }
-
+    
+    printf("lcs: %s\n", lcs);
     write_final_results(dna, string_num, lcs);
-
 }
