@@ -7,7 +7,8 @@
 // helper functions ============================================================
 // takes input
 void take_input(char** dna, int* string_num){
-    FILE *input_file = fopen("hw2_input.txt", "r");
+    //FILE *input_file = fopen("hw2_input.txt", "r");
+    FILE *input_file = fopen("dna_sequences.txt", "r");
 
     //scan number of inputs
     fscanf(input_file, "%d", string_num); 
@@ -54,12 +55,11 @@ void write_final_results(char** dna, int size, char* lcs){
 
     // append elements to aligned dna one by one according to the lcs alignment
     int aligned_index = 0;
-    int count = 0; //count the number of strings that are longer than the lcs
-    while(count < size){    
+    int less_than_size = 1; //checks if indexes are less than size
+    while(less_than_size){    
         for(int i = 0; i < size; i++){
             if(indexes[i] > strlen(dna[i])){ //if longer than the string, continue
-                count++;
-                aligned_index--;
+                less_than_size = 0;
             } 
             // if dna sequence is longer than lcs, just append the rest 
             else if(lcs_index > strlen(lcs)){
@@ -79,15 +79,25 @@ void write_final_results(char** dna, int size, char* lcs){
                 indexes[i]--;
             }
         }
-
         aligned_index++;
         for(int i = 0; i< size; i++) indexes[i]++;
     }
 
+    for(int i = 0; i < size; i++){
+        if(indexes[i] > strlen(dna[i])) continue;
+        else if(indexes[i] < strlen(dna[i])){
+            for(int j = indexes[i]; j < strlen(dna[i]); j++){
+                aligned_dna[i][aligned_index] = dna[i][j];
+                aligned_index++;
+            }
+        }
+    }
+
     //write aligned sequences to file
     for(int i = 0; i < size; i++) {
-        for(int j = 0; j < strlen(aligned_dna[0]); j++){
-            fputc(aligned_dna[i][j], output);
+        for(int j = 0; j < aligned_index; j++){
+            if(aligned_dna[i][j] == '\0') fputc('-', output);
+            else fputc(aligned_dna[i][j], output);
         }
         fputc('\n', output);
         printf("%s\n", aligned_dna[i]);
@@ -95,7 +105,7 @@ void write_final_results(char** dna, int size, char* lcs){
 
     //print asterisks
     int i = 0;
-    for(int j = 0; j < strlen(aligned_dna[0]); j++){
+    for(int j = 0; j < aligned_index; j++){
         if(i < strlen(lcs) && lcs[i] == aligned_dna[0][j]){
             fputc('*', output);
             i++;
@@ -125,8 +135,14 @@ char* find_lcs2(char** dna){
     int len1 = strlen(dna[0]);
     int len2 = strlen(dna[1]);
 
-    int table[len1+1][len2+1];
+    // create table
+    int** table = (int**)malloc(sizeof(int*) * (len1+1));
 
+    for(int i = 0; i < len1+1; i++){
+        table[i] = (int*)malloc(sizeof(int) * (len2+1));
+    }
+
+    // fill in table
     for(int i = 0; i < len1+1; i++){
         for(int j = 0; j < len2+1; j++){
             if(i == 0 || j == 0){
@@ -139,10 +155,12 @@ char* find_lcs2(char** dna){
         }
     }
 
+    // create lcs
     int lcs_length = table[len1][len2];
     char* lcs = malloc(sizeof(char) * lcs_length);
     lcs[lcs_length] = '\0';
 
+    // backtracking to find lcs
     int i = len1; int j = len2;
     int lcs_index = lcs_length -1;
     while(i > 0 && j > 0){
@@ -167,8 +185,17 @@ char* find_lcs3(char** dna){
     int len2 = strlen(dna[1]);
     int len3 = strlen(dna[2]);
 
-    int table[len1+1][len2+1][len3+1];
+    // create table
+    int*** table = (int ***)malloc(sizeof(int**) * (len1+1));
+    
+    for(int i = 0; i < len1+1; i++){
+        table[i] = (int**)malloc(sizeof(int*) * (len2+1));
+        for(int j = 0; j < len2+1; j++){
+            table[i][j] = (int*)malloc(sizeof(int) * (len3+1));
+        }
+    }
 
+    // fill in table
     for(int i = 0; i < len1+1; i ++){
         for(int j = 0; j < len2+1; j++){
             for(int k = 0; k < len3+1; k++){   
@@ -183,13 +210,14 @@ char* find_lcs3(char** dna){
         }
     }
 
+    // create lcs
     int lcs_length = table[len1][len2][len3];
     char* lcs = malloc(sizeof(char) * lcs_length);
     lcs[lcs_length] = '\0';
 
+    // backtracking to find lcs
     int i = len1; int j = len2; int k = len3;
     int lcs_index = lcs_length-1;
-
     while(i > 0 && j > 0 && k > 0){
         if(table[i-1][j][k] == table[i][j][k]){
             i--;
@@ -209,9 +237,21 @@ char* find_lcs3(char** dna){
 
 char* find_lcs4(char** dna){
     int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]);
+    
+    // create table
+    int**** table = (int****)malloc(sizeof(int***) * (len1+1));
 
-    int table[len1+1][len2+1][len3+1][len4+1];
-
+    for(int i = 0; i < len1+1; i++){
+        table[i] = (int***)malloc(sizeof(int**) * (len2+1));
+        for(int j = 0; j < len2+1; j++){
+            table[i][j] = (int**)malloc(sizeof(int*) * (len3+1));
+            for(int k = 0; k < len3+1; k++){
+                table[i][j][k] = (int*)malloc(sizeof(int) * (len4+1));
+            }
+        }
+    }
+    
+    // fill in table
     for(int i = 0; i < len1+1; i++){
         for(int j = 0; j < len2+1; j++){
             for(int k = 0; k < len3+1; k++){
@@ -228,10 +268,12 @@ char* find_lcs4(char** dna){
         }
     }
 
+    // create lcs
     int lcs_length = table[len1][len2][len3][len4];
     char* lcs = malloc(sizeof(char) * lcs_length);
     lcs[lcs_length] = '\0';
 
+    // backtracking to find lcs
     int lcs_index = lcs_length-1;
     int i = len1; int j = len2; int k = len3; int l = len4;
     while(i > 0 && j > 0 && k > 0 && l > 0){
@@ -254,11 +296,83 @@ char* find_lcs4(char** dna){
     return lcs;
 }
 
+char* find_lcs5(char** dna){
+    int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]); int len5 = strlen(dna[4]);
+
+    // create table
+    int***** table = (int*****)malloc(sizeof(int****) * (len1+1));
+
+    for(int i = 0; i < len1+1; i++){
+        table[i] = (int****)malloc(sizeof(int***) * (len2+1));
+        for(int j = 0; j < len2+1; j++){
+            table[i][j] = (int***)malloc(sizeof(int**) * (len3+1));
+            for(int k = 0; k < len3+1; k++){
+                table[i][j][k] = (int**)malloc(sizeof(int*) * (len4+1));
+                for(int l = 0; l < len4+1; l++){
+                    table[i][j][k][l] = (int*)malloc(sizeof(int) * (len5+1));
+                }
+            }
+        }
+    }
+
+    // fill in table
+    for(int i = 0; i < len1+1; i++){
+        for(int j = 0; j < len2+1; j++){
+            for(int k = 0; k < len3+1; k++){
+                for(int l = 0; l < len4+1; l++){
+                    for(int m = 0; m < len5+1; m++){
+                        if(i == 0 || j == 0 || k == 0 || l == 0 || m == 0){
+                            table[i][j][k][l][m] = 0;
+                        }else if(dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1] && dna[2][k-1] == dna[3][l-1] && dna[3][l-1] == dna[4][m-1]){
+                            table[i][j][k][l][m] = table[i-1][j-1][k-1][l-1][m-1] + 1;
+                        }else{
+                            table[i][j][k][l][m] = get_max(table[i-1][j][k][l][m], table[i][j-1][k][l][m], table[i][j][k-1][l][m], table[i][j][k][l-1][m], table[i][j][k][l][m-1]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // create lcs
+    int lcs_length = table[len1][len2][len3][len4][len5];
+    char* lcs = malloc(sizeof(char) * lcs_length);
+    lcs[lcs_length] = '\0';
+
+    // backtracking to find lcs
+    int lcs_index = lcs_length-1;
+    int i = len1; int j = len2; int k = len3; int l = len4; int m = len5;
+    while(i > 0 && j > 0 && k > 0 && l > 0 && m > 0){
+        int temp = table[i][j][k][l][m];
+        if(table[i-1][j][k][l][m] == temp){
+            i--;
+        }else if(table[i][j-1][k][l][m] == temp){
+            j--;
+        }else if(table[i][j][k-1][l][m] == temp){
+            k--;
+        }else if(table[i][j][k][l-1][m] == temp){
+            l--;
+        }else if(table[i][j][k][l-1][m-1] == temp){
+            m--;
+        }else{
+            lcs[lcs_index] = dna[0][i-1];
+            lcs_index--;
+            i--; j--; k--; l--; m--;
+        }
+    }
+
+    return lcs;
+}
+
 int main(){
     int string_num = 0;
     char* dna[5];
     take_input(dna, &string_num); //store the input sequences
     char* lcs;
+
+    for(int i = 0; i < string_num; i++){
+        printf("%s\n", dna[i]);
+    }
 
     if(string_num == 2){
         lcs = find_lcs2(dna);
@@ -266,6 +380,8 @@ int main(){
         lcs = find_lcs3(dna);
     }else if(string_num == 4){
         lcs = find_lcs4(dna);
+    }else{
+        lcs = find_lcs5(dna);
     }
     
     printf("lcs: %s\n", lcs);
