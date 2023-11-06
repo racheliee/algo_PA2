@@ -55,6 +55,7 @@ void write_final_results(char** dna, int size, char* lcs){
         for(int i = 0; i < size; i++){
             if(indexes[i] > strlen(dna[i])){ //if longer than the string, continue
                 count++;
+                aligned_index--;
             } 
             // if dna sequence is longer than lcs, just append the rest 
             else if(lcs_index > strlen(lcs)){
@@ -84,7 +85,7 @@ void write_final_results(char** dna, int size, char* lcs){
 
     //write aligned sequences to file
     for(int i = 0; i < size; i++) {
-        for(int j = 0; j < aligned_index-size+1; j++){
+        for(int j = 0; j < aligned_index+1; j++){
             fputc(aligned_dna[i][j], output);
         }
         fputc('\n', output);
@@ -93,7 +94,7 @@ void write_final_results(char** dna, int size, char* lcs){
 
     //print asterisks
     int i = 0;
-    for(int j = 0; j < aligned_index-size+1; j++){
+    for(int j = 0; j < aligned_index+1; j++){
         if(i < strlen(lcs) && lcs[i] == aligned_dna[0][j]){
             fputc('*', output);
             i++;
