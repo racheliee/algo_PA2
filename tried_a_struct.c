@@ -5,9 +5,14 @@
 
 #define MAX_LENGTH 120
 
+typedef struct dna_seq{
+    char* sequence;
+    int length;
+} DNA_SEQ;
+
 // helper functions ============================================================
 // takes input
-void take_input(char** dna, int* string_num){
+void take_input(DNA_SEQ** dna, int* string_num){
     //FILE *input_file = fopen("hw2_input.txt", "r");
     FILE *input_file = fopen("dna_sequences.txt", "r");
 
@@ -19,17 +24,19 @@ void take_input(char** dna, int* string_num){
 
     //scan the dna subsequences
     for(int i = 0; i < *string_num; i++){
-        dna[i] = malloc(sizeof(char) * MAX_LENGTH);
-        fscanf(input_file, "%s", dna[i]);
+        dna[i] = (DNA_SEQ*)malloc(sizeof(DNA_SEQ));
+        dna[i]->sequence = malloc(sizeof(char) * MAX_LENGTH);
+        fscanf(input_file, "%s", dna[i]->sequence);
+        dna[i]->length = strlen(dna[i]->sequence);
     }
 
     fclose(input_file);
 }
 
 // returns 1 if the values are the same at the given index
-int is_common(char** dna, int size, char* lcs, int lcs_index, int indexes[5]){
+int is_common(DNA_SEQ** dna, int size, char* lcs, int lcs_index, int indexes[5]){
     for(int i = 0; i < size; i++){
-        if(dna[i][indexes[i]] != lcs[lcs_index]){
+        if(dna[i]->sequence[indexes[i]] != lcs[lcs_index]){
             return 0;
         }
     }
@@ -37,7 +44,7 @@ int is_common(char** dna, int size, char* lcs, int lcs_index, int indexes[5]){
 }
 
 // write final inputs to file (aligned dna sequences and asterisks to mark lcs)
-void write_final_results(char** dna, int size, char* lcs){
+void write_final_results(DNA_SEQ** dna, int size, char* lcs){
     int lcs_index = 0;
     char* aligned_dna[size];
     int max_length = 0;
@@ -58,10 +65,10 @@ void write_final_results(char** dna, int size, char* lcs){
     int loop = 1;
     while(loop){
         for(int i = 0; i < size; i++){
-            if(dna[i][indexes[i]] != lcs[lcs_index]){
-                aligned_dna[i][aligned_index] = dna[i][indexes[i]];
-            }else if (lcs[lcs_index] == dna[i][indexes[i]] && is_common(dna, size, lcs, lcs_index, indexes)){ //aligned
-                for(int j = 0; j < size; j++) aligned_dna[j][aligned_index] = dna[j][indexes[j]];
+            if(dna[i]->sequence[indexes[i]] != lcs[lcs_index]){
+                aligned_dna[i][aligned_index] = dna[i]->sequence[indexes[i]];
+            }else if (lcs[lcs_index] == dna[i]->sequence[indexes[i]] && is_common(dna, size, lcs, lcs_index, indexes)){ //aligned
+                for(int j = 0; j < size; j++) aligned_dna[j][aligned_index] = dna[j]->sequence[indexes[j]];
                 lcs_index++;
                 break;
             }else{
@@ -73,7 +80,7 @@ void write_final_results(char** dna, int size, char* lcs){
         
         //check if indexes are within bound
         for(int i = 0; i < size; i++){
-            if(indexes[i] >= strlen(dna[i])) {
+            if(indexes[i] >= dna[i]->length) {
                 loop = 0;
                 break;
             }
@@ -83,11 +90,11 @@ void write_final_results(char** dna, int size, char* lcs){
     //appending any left over characters after alignment
     int longest_aligned_length = 0;
     for(int i = 0; i < size; i++){
-        if(indexes[i] < strlen(dna[i])){
+        if(indexes[i] < dna[i]->length){
             int temp_aligned_index = aligned_index;
-            if((strlen(dna[i]) - indexes[i]) > longest_aligned_length) longest_aligned_length = strlen(dna[i]) - indexes[i];
-            for(int j = indexes[i]; j < strlen(dna[i]); j++){
-                aligned_dna[i][temp_aligned_index] = dna[i][j];
+            if((dna[i]->length - indexes[i]) > longest_aligned_length) longest_aligned_length = dna[i]->length - indexes[i];
+            for(int j = indexes[i]; j < dna[i]->length; j++){
+                aligned_dna[i][temp_aligned_index] = dna[i]->sequence[j];
                 temp_aligned_index++;
             }
         }
@@ -130,9 +137,9 @@ int get_max(int a, int b, int c, int d, int e){
 }
 
 // lcs functions ================================================================
-char* find_lcs2(char** dna){
-    int len1 = strlen(dna[0]);
-    int len2 = strlen(dna[1]);
+char* find_lcs2(DNA_SEQ** dna){
+    int len1 = dna[0]->length;
+    int len2 = dna[1]->length;
 
     // create table
     int** table = (int**)malloc(sizeof(int*) * (len1+1));
@@ -145,7 +152,7 @@ char* find_lcs2(char** dna){
         for(int j = 0; j < len2+1; j++){
             if(i == 0 || j == 0){
                 table[i][j] = 0;
-            }else if(dna[0][i-1] == dna[1][j-1]){
+            }else if(dna[0]->sequence[i-1] == dna[1]->sequence[j-1]){
                 table[i][j] = table[i-1][j-1] + 1;
             }else{
                 table[i][j] = get_max(table[i-1][j], table[i][j-1], 0, 0, 0);
@@ -167,7 +174,7 @@ char* find_lcs2(char** dna){
         }else if(table[i][j-1] == table[i][j]){
             j--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = dna[0]->sequence[i-1];
             i--; j--;
             lcs_index--;
         }
@@ -178,10 +185,8 @@ char* find_lcs2(char** dna){
     return lcs;
 }
 
-char* find_lcs3(char** dna){
-    int len1 = strlen(dna[0]);
-    int len2 = strlen(dna[1]);
-    int len3 = strlen(dna[2]);
+char* find_lcs3(DNA_SEQ** dna){
+    int len1 = dna[0]->length; int len2 = dna[1]->length; int len3 = dna[2]->length;
 
     // create table
     int*** table = (int ***)malloc(sizeof(int**) * (len1+1));
@@ -199,7 +204,7 @@ char* find_lcs3(char** dna){
             for(int k = 0; k < len3+1; k++){   
                 if(i == 0 || j == 0 || k == 0){
                     table[i][j][k] = 0;
-                }else if (dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1]){
+                }else if (dna[0]->sequence[i-1] == dna[1]->sequence[j-1] && dna[1]->sequence[j-1] == dna[2]->sequence[k-1]){
                     table[i][j][k] = table[i-1][j-1][k-1] + 1;
                 }else{
                     table[i][j][k] = get_max(table[i-1][j][k], table[i][j-1][k], table[i][j][k-1], 0, 0);
@@ -224,7 +229,7 @@ char* find_lcs3(char** dna){
         }else if(table[i][j][k-1] == table[i][j][k]){
             k--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = dna[0]->sequence[i-1];
             i--; j--; k--;
             lcs_index--;
         }
@@ -235,8 +240,8 @@ char* find_lcs3(char** dna){
     return lcs;
 }
 
-char* find_lcs4(char** dna){
-    int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]);
+char* find_lcs4(DNA_SEQ** dna){
+    int len1 = dna[0]->length; int len2 = dna[1]->length; int len3 = dna[2]->length; int len4 = dna[3]->length; 
     
     // create table
     int**** table = (int****)malloc(sizeof(int***) * (len1+1));
@@ -258,7 +263,7 @@ char* find_lcs4(char** dna){
                 for(int l= 0; l < len4+1; l++){
                     if(i == 0 || j == 0 || k == 0|| l == 0){
                         table[i][j][k][l] = 0;
-                    }else if(dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1] && dna[2][k-1] == dna[3][l-1]){
+                    }else if(dna[0]->sequence[i-1] == dna[1]->sequence[j-1] && dna[1]->sequence[j-1] == dna[2]->sequence[k-1] && dna[2]->sequence[k-1] == dna[3]->sequence[l-1]){
                         table[i][j][k][l] = table[i-1][j-1][k-1][l-1] + 1;
                     }else{
                         table[i][j][k][l] = get_max(table[i-1][j][k][l], table[i][j-1][k][l], table[i][j][k-1][l], table[i][j][k][l-1], 0);
@@ -287,7 +292,7 @@ char* find_lcs4(char** dna){
         }else if(table[i][j][k][l-1] == temp){
             l--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = dna[0]->sequence[i-1];
             lcs_index--;
             i--; j--; k--; l--;
         }
@@ -298,8 +303,8 @@ char* find_lcs4(char** dna){
     return lcs;
 }
 
-char* find_lcs5(char** dna){
-    int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]); int len5 = strlen(dna[4]);
+char* find_lcs5(DNA_SEQ** dna){
+    int len1 = dna[0]->length; int len2 = dna[1]->length; int len3 = dna[2]->length; int len4 = dna[3]->length; int len5 = dna[4]->length;
 
     // create table
     int***** table = (int*****)malloc(sizeof(int****) * (len1+1));
@@ -325,7 +330,8 @@ char* find_lcs5(char** dna){
                     for(int m = 0; m < len5+1; m++){
                         if(i == 0 || j == 0 || k == 0 || l == 0 || m == 0){
                             table[i][j][k][l][m] = 0;
-                        }else if(dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1] && dna[2][k-1] == dna[3][l-1] && dna[3][l-1] == dna[4][m-1]){
+                        }else if(dna[0]->sequence[i-1] == dna[1]->sequence[j-1] && dna[1]->sequence[j-1] == dna[2]->sequence[k-1] 
+                                && dna[2]->sequence[k-1] == dna[3]->sequence[l-1] && dna[3]->sequence[l-1] == dna[4]->sequence[m-1]){
                             table[i][j][k][l][m] = table[i-1][j-1][k-1][l-1][m-1] + 1;
                         }else{
                             table[i][j][k][l][m] = get_max(table[i-1][j][k][l][m], table[i][j-1][k][l][m], table[i][j][k-1][l][m], table[i][j][k][l-1][m], table[i][j][k][l][m-1]);
@@ -357,7 +363,7 @@ char* find_lcs5(char** dna){
         }else if(table[i][j][k][l-1][m-1] == temp){
             m--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = dna[0]->sequence[i-1];
             lcs_index--;
             i--; j--; k--; l--; m--;
         }
@@ -368,14 +374,7 @@ char* find_lcs5(char** dna){
     return lcs;
 }
 
-char* find_lcs5_alternative(char** dna){
-    int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]); int len5 = strlen(dna[4]);
-
-    char* lcs_options[6];
-
-    
-
-
+char* find_lcs5_alternative(DNA_SEQ** dna){
     return NULL;
 }
 
@@ -386,7 +385,7 @@ int main(){
     clock_t start = clock();
 
     int string_num = 0;
-    char* dna[5];
+    DNA_SEQ* dna[5];
     take_input(dna, &string_num); //store the input sequences
     char* lcs;
 
@@ -397,7 +396,7 @@ int main(){
     }else if(string_num == 4){
         lcs = find_lcs4(dna);
     }else{
-        if(get_max(strlen(dna[0]), strlen(dna[1]), strlen(dna[2]), strlen(dna[3]), strlen(dna[4])) < 80) lcs = find_lcs5(dna);
+        if(get_max(dna[0]->length, dna[1]->length, dna[2]->length, dna[3]->length, dna[4]->length) < 80) lcs = find_lcs5(dna);
         else lcs = find_lcs5_alternative(dna);
     }
     
