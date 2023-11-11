@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 
-#define MAX_LENGTH 120
+#define MAX_LENGTH 150
 #define MAX_SEQUENCES 5
 
 //struct definitions ===========================================================
