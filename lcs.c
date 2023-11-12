@@ -168,8 +168,113 @@ void write_final_results(DNA_SEQ* dna, int size, char* lcs){
     fclose(output);
 }
 
-
 // lcs functions ================================================================
+
+char* find_lcs2(DNA_SEQ* dna, int string_num){
+    // create table
+    int** table = (int**)malloc(sizeof(int*) * (dna[0].length+1));
+    for(int i = 0; i < dna[0].length+1; i++){
+        table[i] = (int*)malloc(sizeof(int) * (dna[1].length+1));
+    }
+
+    // fill in table
+    for(int i = 0; i < dna[0].length+1; i++){
+        for(int j = 0; j < dna[1].length+1; j++){
+            if(i == 0 || j == 0){
+                table[i][j] = 0;
+            }else if(dna[0].sequence[i-1] == dna[1].sequence[j-1]){
+                table[i][j] = table[i-1][j-1] + 1;
+            }else{
+                //take the maximum of either the top or the left
+                if(table[i-1][j] > table[i][j-1]){
+                    table[i][j] = table[i-1][j];
+                }else{
+                    table[i][j] = table[i][j-1];
+                }
+            }
+        }
+    }
+
+    // create lcs
+    int lcs_length = table[dna[0].length][dna[1].length];
+    char* lcs = malloc(sizeof(char) * lcs_length);
+    lcs[lcs_length] = '\0';
+
+    // backtracking to find lcs
+    int lcs_index = lcs_length-1;
+    int i = dna[0].length; int j = dna[1].length;
+    while(i > 0 && j > 0){
+        if(table[i-1][j] == table[i][j]){
+            i--;
+        }else if(table[i][j-1] == table[i][j]){
+            j--;
+        }else{
+            lcs[lcs_index] = dna[0].sequence[i-1];
+            i--; j--;
+            lcs_index--;
+        }
+    }
+
+    free(table);
+
+    return lcs;
+}
+
+char* find_lcs3(DNA_SEQ* dna, int string_num){
+    // create table
+    int*** table = (int ***)malloc(sizeof(int**) * (dna[0].length+1));
+    
+    for(int i = 0; i < dna[0].length+1; i++){
+        table[i] = (int**)malloc(sizeof(int*) * (dna[1].length+1));
+        for(int j = 0; j < dna[1].length+1; j++){
+            table[i][j] = (int*)malloc(sizeof(int) * (dna[2].length+1));
+        }
+    }
+
+    // fill in table
+    for(int i = 0; i < dna[0].length+1; i ++){
+        for(int j = 0; j < dna[1].length+1; j++){
+            for(int k = 0; k < dna[2].length+1; k++){   
+                if(i == 0 || j == 0 || k == 0){
+                    table[i][j][k] = 0;
+                }else if (dna[0].sequence[i-1] == dna[1].sequence[j-1] && dna[1].sequence[j-1] == dna[2].sequence[k-1]){
+                    table[i][j][k] = table[i-1][j-1][k-1] + 1;
+                }else{
+                    int max = table[i-1][j][k];
+                    if(table[i][j-1][k] > max) max = table[i][j-1][k];
+                    if(table[i][j][k-1] > max) max = table[i][j][k-1];
+                    table[i][j][k] = max;
+                }
+            }
+        }
+    }
+
+    // create lcs
+    int lcs_length = table[dna[0].length][dna[1].length][dna[2].length];
+    char* lcs = malloc(sizeof(char) * lcs_length);
+    lcs[lcs_length] = '\0';
+
+    // backtracking to find lcs
+    int i = dna[0].length; int j = dna[1].length; int k = dna[2].length;
+    int lcs_index = lcs_length-1;
+    while(i > 0 && j > 0 && k > 0){
+        if(table[i-1][j][k] == table[i][j][k]){
+            i--;
+        }else if(table[i][j-1][k] == table[i][j][k]){
+            j--;
+        }else if(table[i][j][k-1] == table[i][j][k]){
+            k--;
+        }else{
+            lcs[lcs_index] = dna[0].sequence[i-1];
+            i--; j--; k--;
+            lcs_index--;
+        }
+    }
+
+    free(table);
+
+    return lcs;
+}
 
 int calc_lcs_length4(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes){
     // if the indexes equal to -1, it indicated the end of string and hence, the length is 0
@@ -248,7 +353,6 @@ char* traceback4(DNA_SEQ* dna, int string_num, int lcs_length, NODE***** table){
         lcs[i] = dna[0].sequence[current_node->str_indexes[0][0]-1];
     }
 
-    printf("lcs: %s\n", lcs);
     return lcs; 
 }
 
@@ -270,7 +374,6 @@ char* find_lcs4(DNA_SEQ* dna, int string_num){
     for(int i = 0; i < string_num; i++) starting_indexes[i] = 0;
     // calculate length of lcs
     int lcs_length = calc_lcs_length4(dna, string_num, table, starting_indexes)-1;
-    printf("lcs len: %d\n", lcs_length);
     //find lcs
     char* lcs = traceback4(dna, string_num, lcs_length, table);
 
@@ -334,24 +437,6 @@ int calc_lcs_length5(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes
             }
         }
 
-        // //check
-        // printf("indexes: ");
-        // for(int i = 0; i< 5; i++){
-        //     printf("%d, ", indexes[i]);
-        // }
-
-        // //check
-        // printf("\n");
-        // //check
-        // for(int i= 0; i< 4; i ++){
-        //     printf("next four indexes: ");
-        //     for(int j = 0; j < string_num; j++){
-        //         printf("%d ", next_four_indexes[i][j]);
-        //     }
-        //     printf("\n");
-        // }
-        
-
         int next_four_node_lengths[4];
         for(int i = 0; i < 4; i++){
             next_four_node_lengths[i] = calc_lcs_length5(dna, string_num, table, next_four_indexes[i]);
@@ -368,7 +453,6 @@ int calc_lcs_length5(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes
         }
 
         new_node->lcs_length = max_length+1; 
-        // printf("lcs length: %d\n", max_length+1);
         //save the next values into str_indexes
         for(int i = 0; i < string_num; i++){
             new_node->str_indexes[1][i] = next_four_indexes[max_index][i]; 
@@ -394,11 +478,8 @@ char* traceback5(DNA_SEQ* dna, int string_num, int lcs_length, NODE***** table){
         }
         
         lcs[i] = dna[0].sequence[current_node->str_indexes[0][0]-1];
-        // printf("lcs: %c\n", lcs[i]);
         current_node = after_node;
     }
-
-    printf("lcs: %s\n", lcs);
     return lcs; 
 }
 
@@ -421,8 +502,6 @@ char* find_lcs5(DNA_SEQ* dna, int string_num){
 
     // calculate length of lcs
     int lcs_length = calc_lcs_length5(dna, string_num, table, starting_indexes)-1;
-    printf("lcs len: %d\n", lcs_length);
-
     //find lcs
     char* lcs = traceback5(dna, string_num, lcs_length, table);
     //char* lcs = "ATCCAT";
@@ -440,30 +519,22 @@ int main(){
     DNA_SEQ dna[MAX_SEQUENCES];
     take_input(dna, &string_num); //store the input sequences
 
-    // for(int i = 0; i < string_num; i++){
-    //     // for(int j = 0; j < 4; j++){
-    //     //     for(int k = 0; k < dna[i].length; k++){
-    //     //         printf("%d ", dna[i].letter[j][k]);
-    //     //     }
-    //     //     printf("\n");
-    //     // }
-    //     printf("%s\n", dna[i].sequence);
-    // }
-
     char* lcs;
-
     if(string_num == 2){
-        
+        lcs = find_lcs2(dna, string_num);
     }else if(string_num == 3){
-        
+        lcs = find_lcs3(dna, string_num);
     }else if(string_num == 4){
         lcs = find_lcs4(dna, string_num);
     }else{
         lcs = find_lcs5(dna, string_num);
     }
 
-    //write_final_results(dna, string_num, lcs);
+    printf("lcs: %s\n", lcs);
+    //write final output
+    write_final_results(dna, string_num, lcs);
 
+    //free memory
     for(int i = 0; i < string_num; i++) free(dna[i].sequence);
 
     //at end of main
