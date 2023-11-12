@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #define MAX_LENGTH 150
 #define MAX_SEQUENCES 5
@@ -22,8 +21,7 @@ typedef struct node{
 // helper functions ============================================================
 // takes input
 void take_input(DNA_SEQ* dna, int* string_num){
-    //FILE *input_file = fopen("hw2_input.txt", "r");
-    FILE *input_file = fopen("dna_sequences.txt", "r");
+    FILE *input_file = fopen("hw2_input.txt", "r");
 
     fscanf(input_file, "%d", string_num); //scan number of inputs
     fscanf(input_file, "%*s"); //remove unnecessary characters
@@ -511,10 +509,6 @@ char* find_lcs5(DNA_SEQ* dna, int string_num){
 
 // main function ================================================================
 int main(){
-    //Checking run time at beginning of main
-    int TIME = 0;
-    clock_t start = clock();
-
     int string_num = 0;
     DNA_SEQ dna[MAX_SEQUENCES];
     take_input(dna, &string_num); //store the input sequences
@@ -529,16 +523,11 @@ int main(){
     }else{
         lcs = find_lcs5(dna, string_num);
     }
-
-    printf("lcs: %s\n", lcs);
     //write final output
     write_final_results(dna, string_num, lcs);
 
     //free memory
     for(int i = 0; i < string_num; i++) free(dna[i].sequence);
 
-    //at end of main
-    TIME += ((int)clock() - start) / (CLOCKS_PER_SEC / 1000);
-    printf("TIME : %d ms\n", TIME);
     return 0;
 }

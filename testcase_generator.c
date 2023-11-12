@@ -20,6 +20,7 @@ int main() {
     srand(time(NULL)); // Seed the random number generator
 
     int numSequences = (rand() % 4) + 2; // Generate 2 to 5 sequences
+    //int numSequences = 3;
     const char* filename = "dna_sequences.txt";
 
     FILE* file = fopen(filename, "w");
@@ -32,7 +33,7 @@ int main() {
     fprintf(file, "$\n");
 
     for (int i = 0; i < numSequences; i++) {
-        int minLength = 1;
+        int minLength = 110;
         int maxLength = 120;
 
         char* sequence = generateRandomSequence(minLength, maxLength);

@@ -13,10 +13,8 @@ void take_input(char** dna, int* string_num){
 
     //scan number of inputs
     fscanf(input_file, "%d", string_num); 
-
     //remove unnecessary characters
     fscanf(input_file, "%*s"); 
-
     //scan the dna subsequences
     for(int i = 0; i < *string_num; i++){
         dna[i] = malloc(sizeof(char) * MAX_LENGTH);
@@ -130,9 +128,9 @@ int get_max(int a, int b, int c, int d, int e){
 }
 
 // lcs functions ================================================================
-char* find_lcs2(char** dna){
-    int len1 = strlen(dna[0]);
-    int len2 = strlen(dna[1]);
+char* find_lcs2(char* str1, char* str2){
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
 
     // create table
     int** table = (int**)malloc(sizeof(int*) * (len1+1));
@@ -145,7 +143,7 @@ char* find_lcs2(char** dna){
         for(int j = 0; j < len2+1; j++){
             if(i == 0 || j == 0){
                 table[i][j] = 0;
-            }else if(dna[0][i-1] == dna[1][j-1]){
+            }else if(str1[i-1] == str2[j-1]){
                 table[i][j] = table[i-1][j-1] + 1;
             }else{
                 table[i][j] = get_max(table[i-1][j], table[i][j-1], 0, 0, 0);
@@ -167,7 +165,7 @@ char* find_lcs2(char** dna){
         }else if(table[i][j-1] == table[i][j]){
             j--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = str1[i-1];
             i--; j--;
             lcs_index--;
         }
@@ -178,10 +176,10 @@ char* find_lcs2(char** dna){
     return lcs;
 }
 
-char* find_lcs3(char** dna){
-    int len1 = strlen(dna[0]);
-    int len2 = strlen(dna[1]);
-    int len3 = strlen(dna[2]);
+char* find_lcs3(char* str1, char* str2, char* str3){
+    int len1 = strlen(str1);
+    int len2 = strlen(str2);
+    int len3 = strlen(str3);
 
     // create table
     int*** table = (int ***)malloc(sizeof(int**) * (len1+1));
@@ -199,7 +197,7 @@ char* find_lcs3(char** dna){
             for(int k = 0; k < len3+1; k++){   
                 if(i == 0 || j == 0 || k == 0){
                     table[i][j][k] = 0;
-                }else if (dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1]){
+                }else if (str1[i-1] == str2[j-1] && str2[j-1] == str3[k-1]){
                     table[i][j][k] = table[i-1][j-1][k-1] + 1;
                 }else{
                     table[i][j][k] = get_max(table[i-1][j][k], table[i][j-1][k], table[i][j][k-1], 0, 0);
@@ -224,7 +222,7 @@ char* find_lcs3(char** dna){
         }else if(table[i][j][k-1] == table[i][j][k]){
             k--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = str1[i-1];
             i--; j--; k--;
             lcs_index--;
         }
@@ -235,8 +233,8 @@ char* find_lcs3(char** dna){
     return lcs;
 }
 
-char* find_lcs4(char** dna){
-    int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]);
+char* find_lcs4(char* str1, char* str2, char* str3, char* str4){
+    int len1 = strlen(str1); int len2 = strlen(str2); int len3 = strlen(str3); int len4 = strlen(str4);
     
     // create table
     int**** table = (int****)malloc(sizeof(int***) * (len1+1));
@@ -258,7 +256,7 @@ char* find_lcs4(char** dna){
                 for(int l= 0; l < len4+1; l++){
                     if(i == 0 || j == 0 || k == 0|| l == 0){
                         table[i][j][k][l] = 0;
-                    }else if(dna[0][i-1] == dna[1][j-1] && dna[1][j-1] == dna[2][k-1] && dna[2][k-1] == dna[3][l-1]){
+                    }else if(str1[i-1] == str2[j-1] && str2[j-1] == str3[k-1] && str3[k-1] == str4[l-1]){
                         table[i][j][k][l] = table[i-1][j-1][k-1][l-1] + 1;
                     }else{
                         table[i][j][k][l] = get_max(table[i-1][j][k][l], table[i][j-1][k][l], table[i][j][k-1][l], table[i][j][k][l-1], 0);
@@ -287,7 +285,7 @@ char* find_lcs4(char** dna){
         }else if(table[i][j][k][l-1] == temp){
             l--;
         }else{
-            lcs[lcs_index] = dna[0][i-1];
+            lcs[lcs_index] = str1[i-1];
             lcs_index--;
             i--; j--; k--; l--;
         }
@@ -371,12 +369,36 @@ char* find_lcs5(char** dna){
 char* find_lcs5_alternative(char** dna){
     int len1 = strlen(dna[0]); int len2 = strlen(dna[1]); int len3 = strlen(dna[2]); int len4 = strlen(dna[3]); int len5 = strlen(dna[4]);
 
-    char* lcs_options[6];
+    char* lcs_options[5];
 
-    
+    /*
+    lcs_options[0] = find_lcs2(find_lcs2(dna[0], dna[1]), find_lcs3(dna[2], dna[3], dna[4]));
+    lcs_options[1] = find_lcs2(find_lcs2(dna[0], dna[2]), find_lcs3(dna[1], dna[3], dna[4]));
+    lcs_options[2] = find_lcs2(find_lcs2(dna[0], dna[3]), find_lcs3(dna[2], dna[1], dna[4]));
+    lcs_options[3] = find_lcs2(find_lcs2(dna[0], dna[4]), find_lcs3(dna[2], dna[3], dna[1]));
+    lcs_options[4] = find_lcs2(find_lcs2(dna[1], dna[2]), find_lcs3(dna[0], dna[3], dna[4]));
+    lcs_options[5] = find_lcs2(find_lcs2(dna[1], dna[3]), find_lcs3(dna[2], dna[0], dna[4]));
+    lcs_options[6] = find_lcs2(find_lcs2(dna[1], dna[4]), find_lcs3(dna[2], dna[3], dna[0]));
+    lcs_options[7] = find_lcs2(find_lcs2(dna[2], dna[3]), find_lcs3(dna[1], dna[0], dna[4]));
+    lcs_options[8] = find_lcs2(find_lcs2(dna[3], dna[4]), find_lcs3(dna[2], dna[1], dna[0]));
+    */
 
+    lcs_options[0] = find_lcs2(dna[0], find_lcs4(dna[1], dna[2], dna[3], dna[4]));
+    lcs_options[1] = find_lcs2(dna[1], find_lcs4(dna[0], dna[2], dna[3], dna[4]));
+    lcs_options[2] = find_lcs2(dna[2], find_lcs4(dna[0], dna[1], dna[3], dna[4]));
+    lcs_options[3] = find_lcs2(dna[3], find_lcs4(dna[1], dna[2], dna[0], dna[4]));
+    lcs_options[4] = find_lcs2(dna[4], find_lcs4(dna[1], dna[2], dna[3], dna[0]));
 
-    return NULL;
+    char* lcs;
+    int max = 0;
+    for(int i = 0; i < 5; i++){
+        if(max < strlen(lcs_options[i])) {
+            max = strlen(lcs_options[i]);
+            lcs = lcs_options[i];
+        }
+    }
+
+    return lcs;
 }
 
 int main(){
@@ -391,17 +413,18 @@ int main(){
     char* lcs;
 
     if(string_num == 2){
-        lcs = find_lcs2(dna);
+        lcs = find_lcs2(dna[0], dna[1]);
     }else if(string_num == 3){
-        lcs = find_lcs3(dna);
+        lcs = find_lcs3(dna[0], dna[1], dna[2]);
     }else if(string_num == 4){
-        lcs = find_lcs4(dna);
+        lcs = find_lcs4(dna[0], dna[1], dna[2], dna[3]);
     }else{
         if(get_max(strlen(dna[0]), strlen(dna[1]), strlen(dna[2]), strlen(dna[3]), strlen(dna[4])) < 80) lcs = find_lcs5(dna);
         else lcs = find_lcs5_alternative(dna);
     }
     
     printf("lcs: %s\n", lcs);
+    printf("len: %lu\n", strlen(lcs));
     write_final_results(dna, string_num, lcs);
 
     //free memory
