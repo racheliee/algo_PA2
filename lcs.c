@@ -177,11 +177,6 @@ int calc_lcs_length4(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes
         if(indexes[i] == -1) return 0;
     }
 
-    // // check
-    // printf("indexes: ");
-    // for (int i = 0; i < string_num; i++) printf("%d, ", indexes[i]);
-    // printf("\n");
-
     // if indexes are valid, check if the value is already in the table
     NODE* current_node = table[indexes[0]][indexes[1]][indexes[2]][indexes[3]];
 
@@ -204,43 +199,13 @@ int calc_lcs_length4(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes
             new_node->str_indexes[0][i] = indexes[i];
         }
 
-        // check
-    // printf("indexes: ");
-    // for (int i = 0; i < string_num; i++) printf("%d, ", indexes[i]);
-    // printf("\n");
-        
-        //check
-    //     for(int i = 0; i < string_num; i++){
-    //     for(int j = 0; j < 4; j++){
-    //         for(int k = 0; k < dna[i].length; k++){
-    //             printf("%d ", dna[i].letter[j][k]);
-    //         }
-    //         printf("\n");
-    //     }
-    // }
-
-
         //calculate the lcs length by looking at the next four nodes
         int next_four_indexes[4][string_num];
         for(int i = 0; i < string_num; i++){
             for(int j = 0; j < 4; j++){
-                // if(dna[i].letter[j][indexes[i]] == dna[i].length){
-                //     next_four_indexes[j][i] = -1;
-                // }else{
-                //     next_four_indexes[j][i] = dna[i].letter[j][indexes[i]];
-                // }
                 next_four_indexes[j][i] = dna[i].letter[j][indexes[i]];
             }
         }
-
-        // // check
-        // for (int i = 0; i < 4; i++) {
-        //     printf("next four indexes %d: ", i);
-        //     for (int j = 0; j < string_num; j++) {
-        //         printf("%d ", next_four_indexes[i][j]);
-        //     }
-        //     printf("\n");
-        // }
 
         int next_four_node_lengths[4];
         for(int i = 0; i < 4; i++){
@@ -258,7 +223,6 @@ int calc_lcs_length4(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes
         }
 
         new_node->lcs_length = max_length+1; 
-        //printf("lcs_length : %d\n", max_length+1);
         //save the next values into str_indexes
         for(int i = 0; i < string_num; i++){
             new_node->str_indexes[1][i] = next_four_indexes[max_index][i]; 
@@ -282,18 +246,6 @@ char* traceback4(DNA_SEQ* dna, int string_num, int lcs_length, NODE***** table){
         else current_node = next_node;
 
         lcs[i] = dna[0].sequence[current_node->str_indexes[0][0]-1];
-        // printf("please: %c\n", dna[0].sequence[current_node->str_indexes[0][0]-1]);
-
-        // printf("current indexes: ");
-        // for(int i = 0; i < string_num; i++){
-        //     printf("%d ", current_node->str_indexes[0][i]);
-        // }
-        // printf("\nnext indexes: ");
-        // for(int i = 0; i < string_num; i++){
-        //     printf("%d ", current_node->str_indexes[1][i]);
-        // }
-        // printf("\n");
-        
     }
 
     printf("lcs: %s\n", lcs);
@@ -310,9 +262,6 @@ char* find_lcs4(DNA_SEQ* dna, int string_num){
             table[i][j] = (NODE***)malloc(sizeof(NODE**) * MAX_LENGTH);
             for(int k = 0; k < MAX_LENGTH; k++){
                 table[i][j][k] = (NODE**)malloc(sizeof(NODE*) * MAX_LENGTH);
-                // for(int l = 0; l < MAX_LENGTH; l++){
-                //     table[i][j][k][l] = NULL;
-                // }
             }
         }
     }
@@ -324,7 +273,159 @@ char* find_lcs4(DNA_SEQ* dna, int string_num){
     printf("lcs len: %d\n", lcs_length);
     //find lcs
     char* lcs = traceback4(dna, string_num, lcs_length, table);
-    //char* lcs = "ATTGCCAT";
+
+    return lcs;
+}
+
+int node_matches_table_val(int indexes[5], NODE***** table, NODE** current_node){
+    while ((*current_node) != NULL){
+        //the linked node's 5th index and indexes[4] are the same, return 1
+        if((*current_node)->str_indexes[0][4] == indexes[4]){
+            return 1;
+        }
+        //if the next node doesn't exist, then return 0
+        if((*current_node)->next_node == NULL){
+            return 0;
+        }
+        (*current_node) = (*current_node)->next_node;
+    }
+    return 0;
+}
+
+int calc_lcs_length5(DNA_SEQ* dna, int string_num, NODE***** table, int* indexes){
+    // if the indexes equal to -1, it indicated the end of string and hence, the length is 0
+    for(int i = 0; i < string_num; i++){
+        if(indexes[i] == -1) return 0;
+    }
+
+    // if indexes are valid, check if the value is already in the table
+    NODE* current_node = table[indexes[0]][indexes[1]][indexes[2]][indexes[3]];
+
+    // if the value is already in the table, then return its length
+    if(node_matches_table_val(indexes, table, &current_node)){
+        return current_node->lcs_length;
+    }
+    // //otherwise append that node to the memoization table
+    else{
+        NODE *new_node = (NODE*)malloc(sizeof(NODE));
+        
+        // append new node to the table or linked list
+        if(current_node == NULL){
+            table[indexes[0]][indexes[1]][indexes[2]][indexes[3]] = new_node;
+        }else{
+            current_node->next_node = new_node;
+        }
+        
+        //initialize the str_indexes
+        for(int i = 0; i < 2; i++){
+            new_node->str_indexes[i] = malloc(sizeof(int) * string_num);
+        }
+
+        //save the indexes as the new node's str_indexes
+        for(int i = 0; i < string_num; i++){
+            new_node->str_indexes[0][i] = indexes[i];
+        }
+
+        //calculate the lcs length by looking at the next four nodes
+        int next_four_indexes[4][string_num];
+        for(int i = 0; i < string_num; i++){
+            for(int j = 0; j < 4; j++){
+                next_four_indexes[j][i] = dna[i].letter[j][indexes[i]];
+            }
+        }
+
+        // //check
+        // printf("indexes: ");
+        // for(int i = 0; i< 5; i++){
+        //     printf("%d, ", indexes[i]);
+        // }
+
+        // //check
+        // printf("\n");
+        // //check
+        // for(int i= 0; i< 4; i ++){
+        //     printf("next four indexes: ");
+        //     for(int j = 0; j < string_num; j++){
+        //         printf("%d ", next_four_indexes[i][j]);
+        //     }
+        //     printf("\n");
+        // }
+        
+
+        int next_four_node_lengths[4];
+        for(int i = 0; i < 4; i++){
+            next_four_node_lengths[i] = calc_lcs_length5(dna, string_num, table, next_four_indexes[i]);
+        }
+
+        //find the max length
+        int max_length = next_four_node_lengths[0];
+        int max_index = 0;
+        for(int i = 1; i < 4; i++){
+            if(next_four_node_lengths[i] > max_length) {
+                max_length = next_four_node_lengths[i];
+                max_index = i;
+            }
+        }
+
+        new_node->lcs_length = max_length+1; 
+        // printf("lcs length: %d\n", max_length+1);
+        //save the next values into str_indexes
+        for(int i = 0; i < string_num; i++){
+            new_node->str_indexes[1][i] = next_four_indexes[max_index][i]; 
+        }
+
+        return max_length+1; //+1 becaue the current node is also included
+    }
+}
+
+char* traceback5(DNA_SEQ* dna, int string_num, int lcs_length, NODE***** table){
+    char* lcs = malloc(sizeof(char) * (lcs_length+1));
+    lcs[lcs_length] = '\0';
+
+    NODE* current_node = table[0][0][0][0]; //start at the root 
+
+    for(int i = 0; i <lcs_length; i++){
+        NODE* after_node = table[current_node->str_indexes[1][0]][current_node->str_indexes[1][1]][current_node->str_indexes[1][2]][current_node->str_indexes[1][3]];
+
+        if(!node_matches_table_val(current_node->str_indexes[1], table, &after_node)){
+            break;
+        }else{
+            current_node = after_node;
+        }
+        
+        lcs[i] = dna[0].sequence[current_node->str_indexes[0][0]-1];
+        // printf("lcs: %c\n", lcs[i]);
+        current_node = after_node;
+    }
+
+    printf("lcs: %s\n", lcs);
+    return lcs; 
+}
+
+char* find_lcs5(DNA_SEQ* dna, int string_num){
+    NODE***** table = (NODE*****)malloc(sizeof(NODE****) * MAX_LENGTH);
+
+    for(int i = 0; i < MAX_LENGTH; i++){
+        table[i] = (NODE****)malloc(sizeof(NODE***) * MAX_LENGTH);
+        for(int j = 0; j < MAX_LENGTH; j++){
+            table[i][j] = (NODE***)malloc(sizeof(NODE**) * MAX_LENGTH);
+            for(int k = 0; k < MAX_LENGTH; k++){
+                table[i][j][k] = (NODE**)malloc(sizeof(NODE*) * MAX_LENGTH);
+            }
+        }
+    }
+
+    //starting index is all 0's
+    int* starting_indexes = malloc(sizeof(int) * string_num);
+    for(int i = 0; i < string_num; i++) starting_indexes[i] = 0;
+
+    // calculate length of lcs
+    int lcs_length = calc_lcs_length5(dna, string_num, table, starting_indexes)-1;
+    printf("lcs len: %d\n", lcs_length);
+
+    //find lcs
+    char* lcs = traceback5(dna, string_num, lcs_length, table);
+    //char* lcs = "ATCCAT";
 
     return lcs;
 }
@@ -358,10 +459,10 @@ int main(){
     }else if(string_num == 4){
         lcs = find_lcs4(dna, string_num);
     }else{
-        
+        lcs = find_lcs5(dna, string_num);
     }
 
-    write_final_results(dna, string_num, lcs);
+    //write_final_results(dna, string_num, lcs);
 
     for(int i = 0; i < string_num; i++) free(dna[i].sequence);
 
