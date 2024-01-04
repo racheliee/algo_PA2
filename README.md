@@ -1,6 +1,4 @@
-# algorithm_assignment_2
-
-# Algo.PA1
+# algorithm PA2
 23-2 Algorithm Project_2
 
 ## Goal
