@@ -2,8 +2,8 @@
 23-2 Algorithm Project_2
 
 ## Goal
-algorithm to implement multiple sequence alignment with k DNA sequences.
-
+Algorithm to implement multiple sequence alignment with k DNA sequences using Dynamic Programming.
+ 
 ## TODO
  - four-letter alphabet {Adenine (A), Thymine (T), Guanine (G), Cytosine (C)}
  - measure the similarity of genetic sequences by the frequency of the exactly matched alphabets
